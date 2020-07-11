@@ -152,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public boolean onQueryTextSubmit(String query) {
+                getCallDetails();
                 for(Call item: incomingCallsList) {
                     if (item.getCallPhoneNumber().equals(query)) {
                         foundInIncoming = true;

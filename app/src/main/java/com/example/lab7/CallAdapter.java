@@ -91,15 +91,16 @@ public class CallAdapter extends ArrayAdapter<Call> {
 
                 switch (Integer.parseInt(callType)) {
                     case 1:
-                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from incoming call list.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from incoming call list.", Toast.LENGTH_SHORT).show();
                         break;
                     case 2:
-                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from outgoing call list.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from outgoing call list.", Toast.LENGTH_SHORT).show();
                         break;
                     case 3:
-                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from missed call list.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from missed call list.", Toast.LENGTH_SHORT).show();
                         break;
                 }
+
 
                 notifyDataSetChanged();
             }

@@ -9,28 +9,25 @@ Lab Date: July 12, 2020 at 11:59 PM
 package com.example.lab7;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.CallLog;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
     ListView incomingCallsListView;
@@ -54,15 +51,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)) {
             ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_CALL_LOG }, 1);
+            if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG)) {
+                ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_CALL_LOG }, 1);
+            }
         } else {
             getCallDetails();
-        }
-
-        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG)) {
-            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_CALL_LOG }, 1);
-        } else {
-            getCallDetails();
-
         }
     }
 
@@ -73,17 +66,10 @@ public class MainActivity extends AppCompatActivity {
             case 1:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
-                        getCallDetails();
-                    }
-                } else {
-                    Toast.makeText(this, "No permission granted!", Toast.LENGTH_SHORT).show();
-                }
-
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
-                        getCallDetails();
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
+                            Toast.makeText(this, "Permission granted!", Toast.LENGTH_LONG).show();
+                            getCallDetails();
+                        }
                     }
                 } else {
                     Toast.makeText(this, "No permission granted!", Toast.LENGTH_SHORT).show();
@@ -105,32 +91,23 @@ public class MainActivity extends AppCompatActivity {
         int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
         int type = managedCursor.getColumnIndex(CallLog.Calls.TYPE);
         int date = managedCursor.getColumnIndex(CallLog.Calls.DATE);
-        int duration = managedCursor.getColumnIndex(CallLog.Calls.DURATION);
 
         while (managedCursor.moveToNext()) {
             String phoneNumber = managedCursor.getString(number);
             String callType = managedCursor.getString(type);
-            String callDate = managedCursor.getString(date);
-            Date callDayTime = new Date(Long.valueOf(callDate));
-            SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy @ hh:mm aa");
-            String dateString = formatter.format(callDayTime);
-//            String callDuration = managedCursor.getString(duration);
-//            String dir;
+            Long callSeconds = managedCursor.getLong(date);
             int dirCode = Integer.parseInt(callType);
             switch (dirCode) {
                 case CallLog.Calls.INCOMING_TYPE:
-//                    dir = "Incoming";
-                    Call currentIncomingCall = new Call(phoneNumber, dateString);
+                    Call currentIncomingCall = new Call(phoneNumber, callSeconds, callType);
                     incomingCallsList.add(currentIncomingCall);
                     break;
                 case CallLog.Calls.OUTGOING_TYPE:
-//                    dir = "Outgoing";
-                    Call currentOutgoingCall = new Call(phoneNumber, dateString);
+                    Call currentOutgoingCall = new Call(phoneNumber, callSeconds, callType);
                     outgoingCallsList.add(currentOutgoingCall);
                     break;
                 case CallLog.Calls.MISSED_TYPE:
-//                    dir = "Missed";
-                    Call currentMissedCall = new Call(phoneNumber, dateString);
+                    Call currentMissedCall = new Call(phoneNumber, callSeconds, callType);
                     missedCallsList.add(currentMissedCall);
                     break;
                 default:
@@ -169,32 +146,64 @@ public class MainActivity extends AppCompatActivity {
 
         SearchView search = findViewById(R.id.searchView);
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            boolean foundInIncoming = false;
+            boolean foundInOutgoing = false;
+            boolean foundInMissed = false;
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public boolean onQueryTextSubmit(String query) {
                 for(Call item: incomingCallsList) {
                     if (item.getCallPhoneNumber().equals(query)) {
-                        Toast.makeText(getApplicationContext(), "Found the number: " + query + " in incoming call list.", Toast.LENGTH_LONG).show();
-                        return true;
+                        foundInIncoming = true;
                     }
                 }
 
                 for(Call item: outgoingCallsList) {
                     if (item.getCallPhoneNumber().equals(query)) {
-                        Toast.makeText(getApplicationContext(), "Found the number: " + query + " in outgoing call list.", Toast.LENGTH_LONG).show();
-                        return true;
+                        foundInOutgoing = true;
                     }
                 }
 
                 for(Call item: missedCallsList) {
                     if (item.getCallPhoneNumber().equals(query)) {
-                        Toast.makeText(getApplicationContext(), "Found the number: " + query + " in missed call list.", Toast.LENGTH_LONG).show();
-                        return true;
+                        foundInMissed = true;
                     }
                 }
 
-                Toast.makeText(getApplicationContext(), "Number not found.", Toast.LENGTH_LONG).show();
+                StringBuilder foundIn = new StringBuilder();
 
-                return false;
+                if (foundInIncoming) {
+                    foundIn.append("incoming ");
+                }
+
+                if (foundInOutgoing) {
+                    foundIn.append("outgoing ");
+                }
+
+                if (foundInMissed) {
+                    foundIn.append("missed ");
+                }
+
+                if (foundIn.length() == 0) {
+                    Toast.makeText(getApplicationContext(), "Number not found.", Toast.LENGTH_LONG).show();
+                    return false;
+                } else if (foundIn.length() == 1) {
+                    Toast.makeText(getApplicationContext(), "Found the number in: " + foundIn.toString() + " call list.", Toast.LENGTH_LONG).show();
+                    return true;
+                } else {
+                    StringBuilder newFoundIn = new StringBuilder();
+                    String [] foundInArr = foundIn.toString().split(" ");
+                    for (int i = 0; i < foundInArr.length; i++) {
+                        if (i == foundInArr.length-1) {
+                            newFoundIn.append(foundInArr[i]);
+                        } else {
+                            newFoundIn.append(foundInArr[i]);
+                            newFoundIn.append(" and ");
+                        }
+                    }
+                    Toast.makeText(getApplicationContext(), "Found the number in: " + newFoundIn.toString() + " call list.", Toast.LENGTH_LONG).show();
+                    return true;
+                }
             }
 
             @Override
@@ -207,13 +216,9 @@ public class MainActivity extends AppCompatActivity {
     public void getNewData(View view) {
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)) {
             ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_CALL_LOG }, 1);
-        } else {
-            getCallDetails();
-            Toast.makeText(this, "Call log has been updated.", Toast.LENGTH_SHORT).show();
-        }
-
-        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG)) {
-            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_CALL_LOG }, 1);
+            if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG)) {
+                ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_CALL_LOG }, 1);
+            }
         } else {
             getCallDetails();
             Toast.makeText(this, "Call log has been updated.", Toast.LENGTH_SHORT).show();

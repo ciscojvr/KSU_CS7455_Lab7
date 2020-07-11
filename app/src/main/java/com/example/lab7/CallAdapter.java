@@ -9,10 +9,8 @@ package com.example.lab7;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CallLog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,17 +18,16 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.SearchView;
-
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class CallAdapter extends ArrayAdapter<Call> {
 
     private Context mContext;
-    private List<Call> callList = new ArrayList<>();
+    private List<Call> callList;
 
 
     public CallAdapter(@NonNull Context context, ArrayList<Call> list) {
@@ -67,7 +64,13 @@ public class CallAdapter extends ArrayAdapter<Call> {
         callPhoneNumber.setText(currentCall.getCallPhoneNumber());
 
         TextView callDate = (TextView) listItem.findViewById(R.id.textView_callDate);
-        callDate.setText(currentCall.getCallDate());
+        Long callSeconds = currentCall.getCallDate();
+
+        Date callDayTime = new Date(callSeconds);
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy @ hh:mm aa");
+        String dateString = formatter.format(callDayTime);
+
+        callDate.setText(dateString);
 
         Button deleteBtn = (Button) listItem.findViewById(R.id.button_deleteCall);
 
@@ -75,17 +78,28 @@ public class CallAdapter extends ArrayAdapter<Call> {
             @Override
             public void onClick(View v) {
                 String phoneNumber = getItem(position).getCallPhoneNumber();
-                String callDate = getItem(position).getCallDate();
+                Long callSeconds = getItem(position).getCallDate();
+                String callType = getItem(position).getCallType();
 
                 callList.remove(position);
 
-                String queryString = "NUMBER=" + phoneNumber;
+                String queryString = CallLog.Calls.NUMBER + "=? AND " + CallLog.Calls.DATE + "=? AND " + CallLog.Calls.TYPE + "=?";
 
                 Uri callUri = Uri.parse("content://call_log/calls");
                 ContentResolver resolver = getContext().getContentResolver();
-                resolver.delete(callUri, queryString, null);
+                resolver.delete(callUri, queryString, new String[]{phoneNumber, String.valueOf(callSeconds), callType});
 
-                Toast.makeText(getContext(), "Removed the number: " + phoneNumber, Toast.LENGTH_LONG).show();
+                switch (Integer.parseInt(callType)) {
+                    case 1:
+                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from incoming call list.", Toast.LENGTH_LONG).show();
+                        break;
+                    case 2:
+                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from outgoing call list.", Toast.LENGTH_LONG).show();
+                        break;
+                    case 3:
+                        Toast.makeText(getContext(), "Removed the number: " + phoneNumber + " from missed call list.", Toast.LENGTH_LONG).show();
+                        break;
+                }
 
                 notifyDataSetChanged();
             }

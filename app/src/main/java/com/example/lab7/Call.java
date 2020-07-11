@@ -9,11 +9,13 @@ package com.example.lab7;
 
 public class Call {
     private String callPhoneNumber;
-    private String callDate;
+    private Long callDate;
+    private String callType;
 
-    public Call(String callPhoneNumber, String callDate) {
+    public Call(String callPhoneNumber, Long callDate, String callType) {
         this.callPhoneNumber = callPhoneNumber;
         this.callDate = callDate;
+        this.callType = callType;
     }
 
     public String getCallPhoneNumber() {
@@ -24,11 +26,19 @@ public class Call {
         this.callPhoneNumber = callPhoneNumber;
     }
 
-    public String getCallDate() {
+    public Long getCallDate() {
         return callDate;
     }
 
-    public void setCallDate(String callDate) {
+    public void setCallDate(Long callDate) {
         this.callDate = callDate;
+    }
+
+    public String getCallType() {
+        return callType;
+    }
+
+    public void setCallType(String callType) {
+        this.callType = callType;
     }
 }

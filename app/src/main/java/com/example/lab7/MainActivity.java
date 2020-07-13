@@ -49,14 +49,18 @@ public class MainActivity extends AppCompatActivity {
 
         missedCallsListView = (ListView) findViewById(R.id.listView_missedCalls);
 
-        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)) {
-            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_CALL_LOG }, 1);
-            if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG)) {
-                ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_CALL_LOG }, 1);
-            }
-        } else {
-            getCallDetails();
-        }
+//        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)) {
+//            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_CALL_LOG }, 1);
+//            if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG)) {
+//                ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_CALL_LOG }, 1);
+//            }
+//        } else {
+//            getCallDetails();
+//        }
+
+        ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_CALL_LOG }, 1);
+        ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_CALL_LOG }, 1);
+        getCallDetails();
     }
 
 

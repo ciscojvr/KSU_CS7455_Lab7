@@ -101,7 +101,6 @@ public class CallAdapter extends ArrayAdapter<Call> {
                         break;
                 }
 
-
                 notifyDataSetChanged();
             }
         });

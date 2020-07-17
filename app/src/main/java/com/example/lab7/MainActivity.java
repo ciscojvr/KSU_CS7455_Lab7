@@ -21,22 +21,33 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.CallLog;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     ListView incomingCallsListView;
     ListView outgoingCallsListView;
     ListView missedCallsListView;
 
+    ListView searchResultsListView;
+
     ArrayAdapter<Call> incomingCallsArrayAdapter;
     ArrayAdapter<Call> outgoingCallsArrayAdapter;
     ArrayAdapter<Call> missedCallsArrayAdapter;
+
+    SearchView search;
+
+    TextView searchResults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
 
         missedCallsListView = (ListView) findViewById(R.id.listView_missedCalls);
 
+        searchResults = (TextView) findViewById(R.id.textView_results);
+
+        search = findViewById(R.id.searchView);
+
         int permissions_code = 42;
         String[] permissions = {Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG};
 
@@ -59,6 +74,18 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, permissions, permissions_code);
         } else {
             getCallDetails();
+            search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    searchForNumber(newText);
+                    return true;
+                }
+            });
         }
     }
 
@@ -72,6 +99,19 @@ public class MainActivity extends AppCompatActivity {
                         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
                             Toast.makeText(this, "Permission granted!", Toast.LENGTH_LONG).show();
                             getCallDetails();
+                            search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                                @Override
+                                public boolean onQueryTextSubmit(String query) {
+                                    searchForNumber(query);
+                                    return true;
+                                }
+
+                                @Override
+                                public boolean onQueryTextChange(String newText) {
+                                    searchForNumber(newText);
+                                    return true;
+                                }
+                            });
                         }
                     }
                 } else {
@@ -146,75 +186,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         managedCursor.close();
-
-        SearchView search = findViewById(R.id.searchView);
-        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            boolean foundInIncoming = false;
-            boolean foundInOutgoing = false;
-            boolean foundInMissed = false;
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                getCallDetails();
-                for(Call item: incomingCallsList) {
-                    if (item.getCallPhoneNumber().equals(query)) {
-                        foundInIncoming = true;
-                    }
-                }
-
-                for(Call item: outgoingCallsList) {
-                    if (item.getCallPhoneNumber().equals(query)) {
-                        foundInOutgoing = true;
-                    }
-                }
-
-                for(Call item: missedCallsList) {
-                    if (item.getCallPhoneNumber().equals(query)) {
-                        foundInMissed = true;
-                    }
-                }
-
-                StringBuilder foundIn = new StringBuilder();
-
-                if (foundInIncoming) {
-                    foundIn.append("incoming ");
-                }
-
-                if (foundInOutgoing) {
-                    foundIn.append("outgoing ");
-                }
-
-                if (foundInMissed) {
-                    foundIn.append("missed ");
-                }
-
-                if (foundIn.length() == 0) {
-                    Toast.makeText(getApplicationContext(), "Number not found.", Toast.LENGTH_LONG).show();
-                    return false;
-                } else if (foundIn.length() == 1) {
-                    Toast.makeText(getApplicationContext(), "Found the number in: " + foundIn.toString() + " call list.", Toast.LENGTH_LONG).show();
-                    return true;
-                } else {
-                    StringBuilder newFoundIn = new StringBuilder();
-                    String [] foundInArr = foundIn.toString().split(" ");
-                    for (int i = 0; i < foundInArr.length; i++) {
-                        if (i == foundInArr.length-1) {
-                            newFoundIn.append(foundInArr[i]);
-                        } else {
-                            newFoundIn.append(foundInArr[i]);
-                            newFoundIn.append(" and ");
-                        }
-                    }
-                    Toast.makeText(getApplicationContext(), "Found the number in: " + newFoundIn.toString() + " call list.", Toast.LENGTH_LONG).show();
-                    return true;
-                }
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                return false;
-            }
-        });
     }
 
     public void getNewData(View view) {
@@ -228,5 +199,72 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Call log has been updated.", Toast.LENGTH_SHORT).show();
         }
     }
-}
 
+    public void searchForNumber(String inputNumber) {
+//        final ArrayList<Call> searchResultsList = new ArrayList<>();
+        inputNumber = inputNumber.replaceAll("[^0-9]", "");
+
+        Uri callUri = Uri.parse("content://call_log/calls");
+        ContentResolver resolver = getContentResolver();
+        String selectionQuery = "NUMBER=?";
+        Cursor managedCursor = resolver.query(callUri, null, selectionQuery, new String[] {inputNumber}, null);
+        StringBuilder results = new StringBuilder();
+
+        int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
+        int type = managedCursor.getColumnIndex(CallLog.Calls.TYPE);
+        int date = managedCursor.getColumnIndex(CallLog.Calls.DATE);
+
+        while (managedCursor.moveToNext()) {
+            String phoneNumber = managedCursor.getString(number);
+            Long callDate = managedCursor.getLong(date);
+            String callType = managedCursor.getString(type);
+            Long callSeconds = managedCursor.getLong(date);
+
+            Date callDayTime = new Date(callSeconds);
+            SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy @ hh:mm aa");
+            String dateString = formatter.format(callDayTime);
+
+            int dirCode = Integer.parseInt(callType);
+            switch (dirCode) {
+                case CallLog.Calls.INCOMING_TYPE:
+//                    searchResultsList.add(new Call(phoneNumber, callDate, callType));
+                    results.append("Phone #: " + phoneNumber + " Type: Incoming " + "on " + dateString +" \n");
+                    break;
+                case CallLog.Calls.OUTGOING_TYPE:
+//                    searchResultsList.add(new Call(phoneNumber, callDate, callType));
+                    results.append("Phone #: " + phoneNumber + " Type: Outgoing " + "on " + dateString +" \n");
+                    break;
+                case CallLog.Calls.MISSED_TYPE:
+//                    searchResultsList.add(new Call(phoneNumber, callDate, callType));
+                    results.append("Phone #: " + phoneNumber + " Type: Missed " + "on " + dateString +" \n");
+                    break;
+                default:
+                    continue;
+            }
+        }
+
+//        if (searchResultsArrayAdapter == null) {
+//            searchResultsArrayAdapter.add(results.toString());
+//            searchResultsListView.setAdapter(searchResultsArrayAdapter);
+//        } else {
+//            searchResultsArrayAdapter.clear();
+//            searchResultsArrayAdapter.addAll(results.toString());
+//            searchResultsArrayAdapter.notifyDataSetChanged();
+//        }
+
+        if (results.length() > 0) {
+            Log.i(null, "Query Result: \n" + results.toString());
+            results.insert(0,"Results found...\n");
+            searchResults.setText(results.toString());
+        } else {
+            Log.i(null, inputNumber + " not found in call log. ");
+            if(inputNumber.length() > 0) {
+                searchResults.setText(inputNumber + " not found in call log.");
+            } else {
+                searchResults.setText("");
+            }
+        }
+
+        managedCursor.close();
+    }
+}

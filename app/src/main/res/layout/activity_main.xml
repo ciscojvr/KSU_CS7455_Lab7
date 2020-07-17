@@ -35,45 +35,99 @@
             android:onClick="getNewData"
             android:text="Reload" />
 
-        <TextView
-            android:id="@+id/textView_incomingCalls"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Incoming Calls"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:background="@drawable/customborder">
 
-        <ListView
-            android:id="@+id/listView_incomingCalls"
+            <TextView
+                android:id="@+id/textView_searchResults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Search Results"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_results"
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="150dp">
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
-        </ListView>
+            <LinearLayout
+                android:layout_width="140dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/customborder">
 
-        <TextView
-            android:id="@+id/textView_outgoingCalls"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Outgoing Calls"
-            android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/textView_incomingCalls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Incoming Calls"
+                    android:textStyle="bold" />
 
-        <ListView
-            android:id="@+id/listView_outgoingCalls"
-            android:layout_width="match_parent"
-            android:layout_height="150dp">
+                <ListView
+                    android:id="@+id/listView_incomingCalls"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-        </ListView>
+                </ListView>
 
-        <TextView
-            android:id="@+id/textView_missedCalls"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Missed Calls"
-            android:textStyle="bold" />
+            </LinearLayout>
 
-        <ListView
-            android:id="@+id/listView_missedCalls"
-            android:layout_width="match_parent"
-            android:layout_height="150dp" />
+            <LinearLayout
+                android:layout_width="140dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/customborder">
+
+                <TextView
+                    android:id="@+id/textView_outgoingCalls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Outgoing Calls"
+                    android:textStyle="bold" />
+
+                <ListView
+                    android:id="@+id/listView_outgoingCalls"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                </ListView>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="140dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/customborder">
+
+                <TextView
+                    android:id="@+id/textView_missedCalls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Missed Calls"
+                    android:textStyle="bold" />
+
+                <ListView
+                    android:id="@+id/listView_missedCalls"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

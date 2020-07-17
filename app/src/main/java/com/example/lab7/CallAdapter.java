@@ -2,7 +2,7 @@
 
 Name: Francisco Ozuna Diaz
 Assignment: CS 7455 Lab 7
-Lab Date: July 12, 2020 at 11:59 PM
+Lab Date: Due July 12, 2020 at 11:59 PM
  */
 
 package com.example.lab7;

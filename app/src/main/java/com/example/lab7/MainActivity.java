@@ -253,11 +253,11 @@ public class MainActivity extends AppCompatActivity {
 //        }
 
         if (results.length() > 0) {
-            Log.i(null, "Query Result: \n" + results.toString());
+//            Log.i(null, "Query Result: \n" + results.toString());
             results.insert(0,"Results found...\n");
             searchResults.setText(results.toString());
         } else {
-            Log.i(null, inputNumber + " not found in call log. ");
+//            Log.i(null, inputNumber + " not found in call log. ");
             if(inputNumber.length() > 0) {
                 searchResults.setText(inputNumber + " not found in call log.");
             } else {
